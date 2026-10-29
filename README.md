@@ -46,3 +46,4 @@ Odločitve so zapisane po predlogi [MADR](https://adr.github.io/madr/) ([predlog
 | [0007](docs/adr/0007-periodicno-osvezevanje-cenika.md) | Periodično osveževanje javnega cenika namesto sprotnih povezav | sprejeto |
 # drinkExchange
 # drinkExchange
+# drinkExchange
