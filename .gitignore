@@ -1,0 +1,33 @@
+# Odvisnosti
+node_modules/
+
+# Gradnja in predpomnilniki
+dist/
+build/
+coverage/
+.vite/
+*.tsbuildinfo
+.eslintcache
+
+# Okoljske spremenljivke (skrivnosti) – .env.example ostane v repozitoriju
+.env
+.env.*
+!.env.example
+
+# Dnevniki
+logs/
+*.log
+npm-debug.log*
+
+# Lokalni podatki baze (Docker volume, SQLite za teste)
+pgdata/
+*.db
+*.sqlite
+
+# Urejevalniki in OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

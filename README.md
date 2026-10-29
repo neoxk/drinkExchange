@@ -44,6 +44,3 @@ Odločitve so zapisane po predlogi [MADR](https://adr.github.io/madr/) ([predlog
 | [0005](docs/adr/0005-seje-v-piskotkih-in-rbac.md) | Strežniške seje v piškotkih in preverjanje vlog na strežniku | sprejeto |
 | [0006](docs/adr/0006-ena-instanca-backenda-v-mvp.md) | Ena instanca backenda z vgrajenim cenovnim opravilom v MVP | sprejeto |
 | [0007](docs/adr/0007-periodicno-osvezevanje-cenika.md) | Periodično osveževanje javnega cenika namesto sprotnih povezav | sprejeto |
-# drinkExchange
-# drinkExchange
-# drinkExchange
