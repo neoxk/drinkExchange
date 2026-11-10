@@ -16,9 +16,16 @@ export function ensureCsrfToken(req: Request): string {
 const equal = (a: string, b: string) =>
   a.length === b.length && timingSafeEqual(Buffer.from(a), Buffer.from(b));
 
-/** Synchronizer token: zahteve, ki spreminjajo podatke, morajo poslati žeton seje v glavi. */
+/**
+ * Synchronizer token: zahteve prijavljenih uporabnikov, ki spreminjajo podatke, morajo poslati
+ * žeton seje v glavi. Brez prijave ni česa ponarediti – take zahteve zavrne requireAuth (401).
+ */
 export const csrfProtection: RequestHandler = (req, _res, next) => {
-  if (SAFE_METHODS.has(req.method) || EXEMPT_PATHS.has(req.originalUrl.split("?")[0])) {
+  if (
+    SAFE_METHODS.has(req.method) ||
+    !req.session.userId ||
+    EXEMPT_PATHS.has(req.originalUrl.split("?")[0])
+  ) {
     next();
     return;
   }
