@@ -1,3 +1,5 @@
+import type { Express } from "express";
+import request from "supertest";
 import { prisma } from "../src/db.js";
 
 export async function resetDb() {
@@ -39,4 +41,12 @@ export async function createUser(
       ...overrides,
     },
   });
+}
+
+/** Prijavi uporabnika in vrne agenta s sejo ter CSRF žeton. */
+export async function loginAs(app: Express, user: { email: string }) {
+  const agent = request.agent(app);
+  const res = await agent.post("/api/auth/login").send({ email: user.email, password: TEST_PASSWORD });
+  if (res.status !== 200) throw new Error(`Prijava ni uspela: ${res.status}`);
+  return { agent, csrf: res.body.csrfToken as string };
 }
