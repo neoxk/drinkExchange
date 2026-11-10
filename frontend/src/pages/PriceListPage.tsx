@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { Link } from "react-router-dom";
 import { PriceChange } from "../components/PriceChange";
 import { api, formatEur } from "../lib/api";
 import type { PublicDrink } from "../lib/types";
@@ -25,7 +26,7 @@ export function PriceListPage() {
       {drinks && drinks.length > 0 && (
         <div className="ticker-grid">
           {drinks.map((d) => (
-            <article key={d.id} className="card ticker">
+            <Link key={d.id} to={`/pijace/${d.id}`} className="card ticker">
               <div className="row">
                 <strong>{d.name}</strong>
                 <span className="spacer" />
@@ -34,7 +35,7 @@ export function PriceListPage() {
               <div className="ticker-price">{formatEur(d.currentPrice)}</div>
               <PriceChange change={d.change} percent={d.changePercent} />
               <div className="muted small">Osnovna cena {formatEur(d.basePrice)}</div>
-            </article>
+            </Link>
           ))}
         </div>
       )}
