@@ -7,8 +7,10 @@ import { DrinksAdminPage } from "./pages/DrinksAdminPage";
 import { LoginPage } from "./pages/LoginPage";
 import { ManagerPage } from "./pages/ManagerPage";
 import { OrderPage } from "./pages/OrderPage";
+import { OrdersAdminPage } from "./pages/OrdersAdminPage";
 import { OrdersPage } from "./pages/OrdersPage";
 import { PriceListPage } from "./pages/PriceListPage";
+import { UsersAdminPage } from "./pages/UsersAdminPage";
 
 export function App() {
   return (
@@ -45,6 +47,8 @@ export function App() {
             >
               <Route index element={<Navigate to="pijace" replace />} />
               <Route path="pijace" element={<DrinksAdminPage />} />
+              <Route path="narocila" element={<OrdersAdminPage />} />
+              <Route path="uporabniki" element={<UsersAdminPage />} />
             </Route>
             <Route path="*" element={<p>Stran ne obstaja.</p>} />
           </Route>
