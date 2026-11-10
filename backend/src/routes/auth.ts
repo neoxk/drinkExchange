@@ -2,6 +2,8 @@ import { Router, type Request } from "express";
 import { z } from "zod";
 import { prisma } from "../db.js";
 import { HttpError } from "../lib/http-error.js";
+import { currentUser, requireAuth } from "../middleware/auth.js";
+import { ensureCsrfToken } from "../middleware/csrf.js";
 import { hashPassword, verifyPassword } from "../lib/password.js";
 import { SESSION_COOKIE } from "../session.js";
 import { toPublicUser } from "../services/users.js";
@@ -29,20 +31,17 @@ authRouter.post("/login", async (req, res) => {
   // Nova seja ob prijavi prepreči fiksacijo seje.
   await promisify((cb) => req.session.regenerate(cb));
   req.session.userId = user.id;
+  const csrfToken = ensureCsrfToken(req);
   await promisify((cb) => req.session.save(cb));
-  res.json(toPublicUser(user));
+  res.json({ user: toPublicUser(user), csrfToken });
 });
 
-authRouter.post("/logout", async (req: Request, res) => {
+authRouter.post("/logout", requireAuth, async (req: Request, res) => {
   await promisify((cb) => req.session.destroy(cb));
   res.clearCookie(SESSION_COOKIE);
   res.status(204).end();
 });
 
-authRouter.get("/me", async (req, res) => {
-  const user = req.session.userId
-    ? await prisma.user.findUnique({ where: { id: req.session.userId } })
-    : null;
-  if (!user || !user.active) throw new HttpError(401, "Niste prijavljeni");
-  res.json(toPublicUser(user));
+authRouter.get("/me", requireAuth, (req, res) => {
+  res.json({ user: toPublicUser(currentUser(req)), csrfToken: ensureCsrfToken(req) });
 });
