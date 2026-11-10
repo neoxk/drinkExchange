@@ -1,4 +1,4 @@
-import type { Prisma, User } from "@prisma/client";
+import type { OrderStatus, Prisma, User } from "@prisma/client";
 import { prisma } from "../db.js";
 import { HttpError, badRequest, notFound } from "../lib/http-error.js";
 import { Money, money } from "../lib/money.js";
@@ -60,5 +60,41 @@ export async function addItem(orderId: string, user: User, input: { drinkId: str
   await prisma.orderItem.create({
     data: { orderId, drinkId: drink.id, quantity: input.quantity, unitPrice: drink.currentPrice },
   });
+  return getOrder(orderId, user);
+}
+
+export interface OrderFilter {
+  status?: OrderStatus;
+}
+
+/** Natakar dobi svoja naročila, upravitelj vsa. */
+export async function listOrders(user: User, filter: OrderFilter = {}) {
+  const orders = await prisma.order.findMany({
+    where: {
+      ...(user.role === "WAITER" ? { waiterId: user.id } : {}),
+      ...(filter.status ? { status: filter.status } : {}),
+    },
+    include: orderInclude,
+    orderBy: { createdAt: "desc" },
+    take: 200,
+  });
+  return orders.map(toOrderDto);
+}
+
+/**
+ * Zaključi ali prekliče odprto naročilo. Zaključeno naročilo mora imeti vsaj eno postavko.
+ * Pogojna posodobitev (status = OPEN) prepreči dvojno spremembo pri hkratnih zahtevah.
+ */
+export async function changeStatus(orderId: string, user: User, status: "COMPLETED" | "CANCELLED") {
+  const order = await findAccessibleOrder(orderId, user);
+  if (order.status !== "OPEN") throw new HttpError(409, "Naročilo ni več odprto");
+  if (status === "COMPLETED" && order.items.length === 0) {
+    throw badRequest("Naročilo brez postavk ni mogoče zaključiti");
+  }
+  const { count } = await prisma.order.updateMany({
+    where: { id: orderId, status: "OPEN" },
+    data: { status, completedAt: status === "COMPLETED" ? new Date() : null },
+  });
+  if (count === 0) throw new HttpError(409, "Naročilo ni več odprto");
   return getOrder(orderId, user);
 }
