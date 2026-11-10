@@ -23,3 +23,20 @@ export async function createDrink(overrides: Partial<{
     },
   });
 }
+
+export const TEST_PASSWORD = "geslo-1234";
+
+export async function createUser(
+  overrides: Partial<{ name: string; email: string; role: "WAITER" | "MANAGER"; active: boolean }> = {},
+) {
+  const { hashPassword } = await import("../src/lib/password.js");
+  return prisma.user.create({
+    data: {
+      name: "Test Natakar",
+      email: `user-${Math.random().toString(36).slice(2)}@bar.si`,
+      role: "WAITER",
+      passwordHash: await hashPassword(TEST_PASSWORD),
+      ...overrides,
+    },
+  });
+}
