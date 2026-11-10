@@ -46,6 +46,7 @@ cp .env.example .env      # po želji nastavi SESSION_SECRET
 npm install
 npx prisma migrate dev    # ustvari tabele
 npm run seed              # vzorčne pijače
+npm run create-manager -- --email upravitelj@bar.si --name "Upravitelj" --password "upravitelj123"
 npm run dev
 ```
 
@@ -55,6 +56,8 @@ cd frontend
 npm install
 npm run dev
 ```
+Prijava zaposlenih je na `/prijava`. Prvega upravitelja ustvari skript `create-manager` (javne registracije ni); upravitelj nato v aplikaciji doda natakarje.
+
 Vite preusmeri zahteve na `/api` na backend (`http://localhost:3000`, spremeniš z `API_URL`).
 
 ### Testi in preverjanje kode
