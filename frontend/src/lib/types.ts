@@ -8,3 +8,15 @@ export interface PublicDrink {
   change: string;
   changePercent: number;
 }
+
+export interface HistoryPoint {
+  periodStart: string;
+  oldPrice: string;
+  price: string;
+  unitsSold: number;
+}
+
+export interface DrinkHistory {
+  drink: PublicDrink;
+  history: HistoryPoint[];
+}
