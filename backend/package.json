@@ -11,7 +11,8 @@
     "test": "dotenv -e .env.test -- vitest run",
     "db:migrate": "prisma migrate dev",
     "seed": "prisma db seed",
-    "create-manager": "dotenv -e .env -- tsx src/scripts/create-manager.ts"
+    "create-manager": "dotenv -e .env -- tsx src/scripts/create-manager.ts",
+    "pricing": "dotenv -e .env -- tsx src/scripts/run-pricing.ts"
   },
   "type": "module",
   "dependencies": {

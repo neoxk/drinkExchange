@@ -56,6 +56,8 @@ cd frontend
 npm install
 npm run dev
 ```
+Cene se samodejno preračunajo ob vsaki polni in pol ure (UTC) za pravkar zaključeno 30-minutno obdobje. Za ročni preizkus zaženi `npm run pricing` (zadnje zaključeno obdobje) ali `npm run pricing -- --period 2026-11-11T10:00:00Z`.
+
 Prijava zaposlenih je na `/prijava`. Prvega upravitelja ustvari skript `create-manager` (javne registracije ni); upravitelj nato v aplikaciji doda natakarje.
 
 Vite preusmeri zahteve na `/api` na backend (`http://localhost:3000`, spremeniš z `API_URL`).
