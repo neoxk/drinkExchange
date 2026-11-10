@@ -80,3 +80,11 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .ticker-price { font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 a.ticker:hover { border-color: var(--accent); }
 .chart { width: 100%; min-height: 300px; }
+
+.order-layout { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); align-items: start; }
+.order-total { display: flex; justify-content: space-between; padding-top: 0.75rem; font-size: 1.15rem; }
+.drink-picker { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.drink-picker li { display: grid; grid-template-columns: 1fr 70px auto; gap: 0.5rem; align-items: center; }
+.status-OPEN { color: var(--accent); }
+.status-COMPLETED { color: var(--up); }
+.status-CANCELLED { color: var(--down); }

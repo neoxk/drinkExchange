@@ -5,6 +5,7 @@ import { AuthProvider } from "./lib/auth";
 import { DrinkDetailPage } from "./pages/DrinkDetailPage";
 import { LoginPage } from "./pages/LoginPage";
 import { ManagerPage } from "./pages/ManagerPage";
+import { OrderPage } from "./pages/OrderPage";
 import { OrdersPage } from "./pages/OrdersPage";
 import { PriceListPage } from "./pages/PriceListPage";
 
@@ -22,6 +23,14 @@ export function App() {
               element={
                 <RequireRole roles={["WAITER", "MANAGER"]}>
                   <OrdersPage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="narocila/:id"
+              element={
+                <RequireRole roles={["WAITER", "MANAGER"]}>
+                  <OrderPage />
                 </RequireRole>
               }
             />
