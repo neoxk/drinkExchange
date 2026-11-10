@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { OrderActions } from "../components/OrderActions";
 import { api, formatEur } from "../lib/api";
+import { STATUS_LABEL } from "../lib/labels";
 import type { Order, PublicDrink } from "../lib/types";
 import { usePolling } from "../lib/usePolling";
-
-const STATUS_LABEL = { OPEN: "odprto", COMPLETED: "zaključeno", CANCELLED: "preklicano" } as const;
 
 export function OrderPage() {
   const { id } = useParams();
@@ -79,6 +79,9 @@ export function OrderPage() {
           )}
           <div className="order-total">
             Skupaj <strong>{formatEur(order.total)}</strong>
+          </div>
+          <div className="row" style={{ justifyContent: "flex-end", marginTop: "0.75rem" }}>
+            <OrderActions order={order} onChange={setOrder} />
           </div>
         </section>
 
