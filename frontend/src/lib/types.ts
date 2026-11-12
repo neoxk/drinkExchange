@@ -52,3 +52,15 @@ export interface Order {
   items: OrderItem[];
   total: string;
 }
+
+export interface AdminDrink {
+  id: string;
+  name: string;
+  category: string;
+  basePrice: string;
+  currentPrice: string;
+  minPrice: string;
+  maxPrice: string;
+  active: boolean;
+  createdAt: string;
+}

@@ -1,8 +1,9 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { RequireRole } from "./components/RequireRole";
 import { AuthProvider } from "./lib/auth";
 import { DrinkDetailPage } from "./pages/DrinkDetailPage";
+import { DrinksAdminPage } from "./pages/DrinksAdminPage";
 import { LoginPage } from "./pages/LoginPage";
 import { ManagerPage } from "./pages/ManagerPage";
 import { OrderPage } from "./pages/OrderPage";
@@ -41,7 +42,10 @@ export function App() {
                   <ManagerPage />
                 </RequireRole>
               }
-            />
+            >
+              <Route index element={<Navigate to="pijace" replace />} />
+              <Route path="pijace" element={<DrinksAdminPage />} />
+            </Route>
             <Route path="*" element={<p>Stran ne obstaja.</p>} />
           </Route>
         </Routes>
