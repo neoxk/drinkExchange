@@ -1,56 +1,64 @@
 import { describe, expect, it } from "vitest";
-import { calculateNewPrice } from "../src/pricing/calculate.js";
-import { periodStartOf, previousPeriodStart } from "../src/pricing/period.js";
+import { priceAfterIdle, priceAfterSale } from "../src/pricing/calculate.js";
 
-const price = (currentPrice: number, unitsSold: number, { basePrice = currentPrice, minPrice = 0.1, maxPrice = 100 } = {}) =>
-  calculateNewPrice({ currentPrice, basePrice, minPrice, maxPrice, unitsSold }).toFixed(2);
+const SECOND = 1000;
+const MINUTE = 60 * SECOND;
 
-describe("calculateNewPrice", () => {
-  it("rast sledi ln(1 + enote) s padajočim donosom", () => {
-    expect(price(4, 1)).toBe("4.03"); // +0,69 %
-    expect(price(4, 2)).toBe("4.04"); // +1,10 %
-    expect(price(4, 5)).toBe("4.07"); // +1,79 %
-    expect(price(4, 10)).toBe("4.10"); // +2,40 %
+const afterSale = (currentPrice: number, unitsSold: number, { basePrice = currentPrice, minPrice = 0.1, maxPrice = 100 } = {}) =>
+  priceAfterSale({ currentPrice, basePrice, minPrice, maxPrice }, unitsSold).toFixed(2);
+
+const afterIdle = (currentPrice: number, idleMs: number, { basePrice = currentPrice, minPrice = 0.1, maxPrice = 100 } = {}) =>
+  priceAfterIdle({ currentPrice, basePrice, minPrice, maxPrice }, idleMs).toFixed(2);
+
+describe("priceAfterSale", () => {
+  it("skok sledi ln(1 + enote) s padajočim donosom", () => {
+    expect(afterSale(4, 1)).toBe("4.06"); // +1,39 %
+    expect(afterSale(4, 2)).toBe("4.09"); // +2,20 %
+    expect(afterSale(4, 5)).toBe("4.14"); // +3,58 %
+    expect(afterSale(4, 10)).toBe("4.19"); // +4,80 %
   });
 
-  it("rast je omejena na 3 % na obdobje", () => {
-    expect(price(4, 50)).toBe("4.12");
-    expect(price(4, 500)).toBe("4.12");
+  it("skok je omejen na 6 %", () => {
+    expect(afterSale(4, 50)).toBe("4.24");
+    expect(afterSale(4, 500)).toBe("4.24");
   });
 
-  it("brez prodaje nad osnovno ceno pada za 0,5 %", () => {
-    expect(price(5, 0, { basePrice: 4 })).toBe("4.98"); // 4,975
-  });
-
-  it("brez prodaje pri ali pod osnovno ceno pada za 0,2 %", () => {
-    expect(price(4, 0)).toBe("3.99"); // 3,992
-    expect(price(3.5, 0, { basePrice: 4 })).toBe("3.49"); // 3,493
-  });
-
-  it("se premakne vsaj za 0,01 €, ko bi zaokroževanje spremembo izničilo", () => {
-    expect(price(1.5, 0)).toBe("1.49"); // 1,497 → 1,50
-    expect(price(0.5, 1)).toBe("0.51"); // 0,5035 → 0,50
+  it("se premakne vsaj za 0,01 €, ko bi zaokroževanje skok izničilo", () => {
+    expect(afterSale(0.3, 1)).toBe("0.31"); // 0,3042 → 0,30
   });
 
   it("cena ne preseže max_price", () => {
-    expect(price(4.9, 10, { basePrice: 4, minPrice: 2, maxPrice: 5 })).toBe("5.00");
-    expect(price(5, 10, { basePrice: 4, minPrice: 2, maxPrice: 5 })).toBe("5.00");
-  });
-
-  it("cena ne pade pod min_price", () => {
-    expect(price(2.01, 0, { basePrice: 4, minPrice: 2, maxPrice: 5 })).toBe("2.00");
-    expect(price(2, 0, { basePrice: 4, minPrice: 2, maxPrice: 5 })).toBe("2.00");
+    expect(afterSale(4.9, 10, { basePrice: 4, minPrice: 2, maxPrice: 5 })).toBe("5.00");
+    expect(afterSale(5, 10, { basePrice: 4, minPrice: 2, maxPrice: 5 })).toBe("5.00");
   });
 });
 
-describe("30-sekundna obdobja", () => {
-  it("zaokroži čas na začetek obdobja v UTC", () => {
-    expect(periodStartOf(new Date("2026-11-11T10:47:42Z")).toISOString()).toBe("2026-11-11T10:47:30.000Z");
-    expect(periodStartOf(new Date("2026-11-11T10:47:12Z")).toISOString()).toBe("2026-11-11T10:47:00.000Z");
+describe("priceAfterIdle", () => {
+  const limits = { basePrice: 4, minPrice: 2, maxPrice: 6 };
+
+  it("nad osnovno ceno se odmik razpolovi vsake 3 minute", () => {
+    expect(afterIdle(5, 0, limits)).toBe("5.00");
+    expect(afterIdle(5, 5 * SECOND, limits)).toBe("4.98");
+    expect(afterIdle(5, 3 * MINUTE, limits)).toBe("4.50");
+    expect(afterIdle(5, 6 * MINUTE, limits)).toBe("4.25");
   });
 
-  it("prejšnje obdobje je zadnje v celoti zaključeno", () => {
-    expect(previousPeriodStart(new Date("2026-11-11T10:00:30.500Z")).toISOString()).toBe("2026-11-11T10:00:00.000Z");
-    expect(previousPeriodStart(new Date("2026-11-11T10:00:29Z")).toISOString()).toBe("2026-11-11T09:59:30.000Z");
+  it("pri ali pod osnovno ceno se odmik od min_price razpolovi vsakih 30 minut", () => {
+    expect(afterIdle(4, 5 * SECOND, limits)).toBe("4.00");
+    expect(afterIdle(4, 30 * MINUTE, limits)).toBe("3.00");
+    expect(afterIdle(4, 60 * MINUTE, limits)).toBe("2.50");
+    expect(afterIdle(3.5, 30 * MINUTE, limits)).toBe("2.75");
+  });
+
+  it("po dolgem mirovanju se cena najprej vrne na osnovno in nato pada pod njo", () => {
+    // 4,04 → 4,00 traja 9 minut (odmik pod pol centa), preostalih 30 minut teče pod osnovno ceno
+    expect(afterIdle(4.04, 9 * MINUTE - SECOND, limits)).toBe("4.01");
+    expect(afterIdle(4.04, 39 * MINUTE, limits)).toBe("3.00");
+  });
+
+  it("cena ne pade pod min_price in ostane v mejah", () => {
+    expect(afterIdle(2, 60 * MINUTE, limits)).toBe("2.00");
+    expect(afterIdle(2.01, 24 * 60 * MINUTE, limits)).toBe("2.00");
+    expect(afterIdle(7, 0, limits)).toBe("6.00");
   });
 });

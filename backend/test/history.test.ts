@@ -15,9 +15,9 @@ describe("GET /api/drinks/:id/history", () => {
     const now = Date.now();
     await prisma.priceHistory.createMany({
       data: [
-        { drinkId: drink.id, periodStart: new Date(now - 61 * MINUTE), oldPrice: 2.9, newPrice: 3, unitsSold: 1 },
-        { drinkId: drink.id, periodStart: new Date(now - 1 * MINUTE), oldPrice: 3, newPrice: 3.15, unitsSold: 7 },
-        { drinkId: drink.id, periodStart: new Date(now - 2 * MINUTE), oldPrice: 3, newPrice: 3, unitsSold: 2 },
+        { drinkId: drink.id, changedAt: new Date(now - 61 * MINUTE), oldPrice: 2.9, newPrice: 3, unitsSold: 1 },
+        { drinkId: drink.id, changedAt: new Date(now - 1 * MINUTE), oldPrice: 3, newPrice: 3.15, unitsSold: 7 },
+        { drinkId: drink.id, changedAt: new Date(now - 2 * MINUTE), oldPrice: 3, newPrice: 3, unitsSold: 2 },
       ],
     });
 

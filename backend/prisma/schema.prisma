@@ -39,6 +39,8 @@ model Drink {
   currentPrice Decimal        @map("current_price") @db.Decimal(10, 2)
   minPrice     Decimal        @map("min_price") @db.Decimal(10, 2)
   maxPrice     Decimal        @map("max_price") @db.Decimal(10, 2)
+  // Trenutek zadnje spremembe cene; od njega teče ohlajanje
+  priceUpdatedAt DateTime     @default(now()) @map("price_updated_at") @db.Timestamptz(3)
   active       Boolean        @default(true)
   createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz
   orderItems   OrderItem[]
@@ -77,13 +79,13 @@ model PriceHistory {
   id          String   @id @default(uuid()) @db.Uuid
   drinkId     String   @map("drink_id") @db.Uuid
   drink       Drink    @relation(fields: [drinkId], references: [id])
-  periodStart DateTime @map("period_start") @db.Timestamptz
+  changedAt   DateTime @map("changed_at") @db.Timestamptz
   oldPrice    Decimal  @map("old_price") @db.Decimal(10, 2)
   newPrice    Decimal  @map("new_price") @db.Decimal(10, 2)
   unitsSold   Int      @map("units_sold")
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  @@unique([drinkId, periodStart])
+  @@index([drinkId, changedAt])
   @@map("price_history")
 }
 

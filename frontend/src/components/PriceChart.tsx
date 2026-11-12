@@ -2,11 +2,11 @@ import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YA
 import { formatEur } from "../lib/api";
 import type { HistoryPoint } from "../lib/types";
 
-const time = (iso: string) =>
-  new Date(iso).toLocaleTimeString("sl-SI", { hour: "2-digit", minute: "2-digit" });
+const time = (ms: number) =>
+  new Date(ms).toLocaleTimeString("sl-SI", { hour: "2-digit", minute: "2-digit" });
 
 interface ChartPoint {
-  periodStart: string;
+  time: number;
   price: number;
   unitsSold: number;
 }
@@ -16,25 +16,42 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: { paylo
   const p = payload[0].payload;
   return (
     <div className="card small">
-      <div>{new Date(p.periodStart).toLocaleString("sl-SI")}</div>
+      <div>{new Date(p.time).toLocaleTimeString("sl-SI")}</div>
       <strong>{formatEur(p.price)}</strong>
-      <div className="muted">Prodano: {p.unitsSold}</div>
+      {p.unitsSold > 0 && <div className="up">Prodano: {p.unitsSold}</div>}
     </div>
   );
 }
 
-export function PriceChart({ history }: { history: HistoryPoint[] }) {
+/** Prodaje so označene s piko, ohlajanje cene med njimi je samo črta. */
+function SaleDot({ cx, cy, payload }: { cx?: number; cy?: number; payload?: ChartPoint }) {
+  if (!payload || payload.unitsSold === 0 || cx == null || cy == null) return null;
+  return <circle cx={cx} cy={cy} r={4} fill="var(--up)" stroke="var(--surface)" />;
+}
+
+export function PriceChart({ history, now }: { history: HistoryPoint[]; now: Date }) {
   const data: ChartPoint[] = history.map((h) => ({
-    periodStart: h.periodStart,
+    time: new Date(h.changedAt).getTime(),
     price: Number(h.price),
     unitsSold: h.unitsSold,
   }));
+  // Črta sega do sedanjosti, tudi če se cena nekaj časa ni spremenila.
+  const last = data.at(-1);
+  if (last && now.getTime() > last.time) data.push({ time: now.getTime(), price: last.price, unitsSold: 0 });
   return (
     <div className="chart">
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data} margin={{ top: 10, right: 16, bottom: 0, left: 0 }}>
           <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
-          <XAxis dataKey="periodStart" tickFormatter={time} stroke="var(--muted)" minTickGap={24} />
+          <XAxis
+            dataKey="time"
+            type="number"
+            scale="time"
+            domain={["dataMin", "dataMax"]}
+            tickFormatter={time}
+            stroke="var(--muted)"
+            minTickGap={24}
+          />
           <YAxis
             domain={["auto", "auto"]}
             stroke="var(--muted)"
@@ -42,7 +59,14 @@ export function PriceChart({ history }: { history: HistoryPoint[] }) {
             width={48}
           />
           <Tooltip content={<ChartTooltip />} />
-          <Line type="stepAfter" dataKey="price" stroke="var(--accent)" strokeWidth={2} dot={data.length <= 30 ? { r: 3 } : false} />
+          <Line
+            type="stepAfter"
+            dataKey="price"
+            stroke="var(--accent)"
+            strokeWidth={2}
+            dot={(props) => <SaleDot key={props.index} {...props} />}
+            isAnimationActive={false}
+          />
         </LineChart>
       </ResponsiveContainer>
     </div>

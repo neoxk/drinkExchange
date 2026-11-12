@@ -15,11 +15,11 @@ DrinkExchange je spletna aplikacija za bar, v katerem se cene pijač spreminjajo
 1. Upravitelj vnese pijače, osnovne cene ter najnižjo in najvišjo dovoljeno ceno vsake pijače.
 2. Gost na javni spletni strani spremlja trenutne cene, smer gibanja in zgodovino sprememb. Za ogled ne potrebuje računa.
 3. Gost naroči pijačo pri natakarju. Natakar ustvari naročilo in sistem ob dodajanju postavke shrani trenutno veljavno ceno (ta je za naročilo zaklenjena).
-4. Ko natakar naročilo označi kot zaključeno, se njegove količine vključijo v izračun povpraševanja.
-5. Sistem vsakih 30 sekund za vsako pijačo preveri število prodanih enot v preteklih 30 sekundah. Prodaja ceno zviša za 1 % × ln(1 + enote), največ za 3 %; brez prodaje cena pade za 0,5 %, če je nad osnovno ceno, sicer za 0,2 %. Rezultat se zaokroži na dve decimalki (z najmanjšim korakom 0,01 €) in omeji na nastavljeno najnižjo oziroma najvišjo ceno.
+4. Ko natakar naročilo označi kot zaključeno, se cena naročenih pijač takoj zviša: za 2 % × ln(1 + enote), največ za 6 %.
+5. Med prodajami se cena ohlaja. Nad osnovno ceno se odmik od nje razpolovi vsake 3 minute, pri ali pod osnovno ceno pa se cena počasi (razpolovni čas 30 minut) spušča proti najnižji ceni. Cena je zaokrožena na dve decimalki in omejena na nastavljeno najnižjo oziroma najvišjo ceno.
 6. Nova cena se prikaže gostom in natakarjem, sprememba pa se shrani za graf zgodovine cen.
 
-**Primer:** Osnovna cena limonade je 4,00 €, dovoljeni razpon je od 3,00 € do 6,00 €. Če se v enem 30-minutnem obdobju proda šest limonad, se cena za naslednje obdobje zviša na 4,20 €. Že ustvarjena naročila obdržijo prvotno ceno.
+**Primer:** Osnovna cena limonade je 4,00 €, dovoljeni razpon je od 3,00 € do 6,00 €. Ko natakar zaključi naročilo s šestimi limonadami, se cena takoj zviša na 4,16 €; brez novih naročil je po treh minutah pri 4,08 €. Že ustvarjena naročila obdržijo prvotno ceno.
 
 ## Glavni cilj prve različice
 Delujoča spletna aplikacija z javnim prikazom ponudbe, evidentiranjem naročil, samodejnim preračunavanjem cen, zgodovino cen in ločenimi pravicami za gosta, natakarja in upravitelja.

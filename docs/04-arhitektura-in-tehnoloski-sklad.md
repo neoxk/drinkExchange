@@ -18,7 +18,7 @@ flowchart LR
 1. **Frontend:** javni cenik, prikaz trenda in zgodovine ter zaščitene strani za natakarja in upravitelja. API kliče z `fetch` prek HTTPS, odgovor je JSON. Javni cenik podatke ponovno pridobi približno vsako minuto.
 2. **Backend:** REST API z validacijo vhodnih podatkov, preverjanjem prijave in vlog ter upravljanjem naročil. Cena postavke se določi na strežniku, nikoli iz vrednosti, ki jo pošlje odjemalec.
 3. **Podatkovna baza:** PostgreSQL hrani uporabnike, pijače, naročila, postavke in zgodovino cen. Prisma skrbi za migracije in poizvedbe.
-4. **Razporejeno opravilo:** `node-cron` sproži izračun na mejah 30-minutnih intervalov. Opravilo obdeluje predhodno zaključeno obdobje. V MVP teče samo **ena** instanca backenda; transakcija in enolični ključ preprečujeta ponovno obdelavo obdobja.
+4. **Razporejeno opravilo:** `node-cron` vsakih 5 sekund ohladi cene glede na čas od njihove zadnje spremembe; dvig cene se zgodi že ob zaključku naročila. V MVP teče samo **ena** instanca backenda; ker je ohlajanje funkcija pretečenega časa, ponovni zagon cen ne pokvari.
 
 ## Osnutek API
 
@@ -80,10 +80,10 @@ DrinkExchange/
 - **React + REST API** ([ADR-0001](adr/0001-locen-react-frontend-in-rest-api.md)): ločitev uporabniškega vmesnika od poslovnih pravil; cenovna pravila so enotna za vse odjemalce.
 - **PostgreSQL** ([ADR-0002](adr/0002-relacijska-baza-postgresql.md)): relacije med naročili, postavkami in pijačami ter transakcije zmanjšajo tveganje za nepravilne cene.
 - **Zaklenjena cena postavke** ([ADR-0003](adr/0003-zaklenjena-cena-postavke.md)): naročilo obdrži ceno, veljavno ob dodajanju, tudi če se pozneje spremeni borzna cena.
-- **Strežniški cenovni algoritem** ([ADR-0004](adr/0004-strezniski-izracun-cen-s-periodicnim-opravilom.md), [ADR-0008](adr/0008-kratka-obdobja-in-zvezno-cenovno-pravilo.md)): prepreči, da bi odjemalec sam določal obračunske cene ali povpraševanje.
+- **Strežniški cenovni algoritem** ([ADR-0004](adr/0004-strezniski-izracun-cen-s-periodicnim-opravilom.md), [ADR-0009](adr/0009-takojsen-dvig-ob-prodaji-in-eksponentno-ohlajanje.md)): prepreči, da bi odjemalec sam določal obračunske cene ali povpraševanje.
 - **Seje in RBAC** ([ADR-0005](adr/0005-seje-v-piskotkih-in-rbac.md)): javna registracija ni potrebna; vloge zaposlenih se preverjajo centralno na strežniku.
 - **En sam backend v MVP** ([ADR-0006](adr/0006-ena-instanca-backenda-v-mvp.md)): poenostavi časovno opravilo; pri kasnejšem skaliranju se opravilo loči v samostojen proces z zaklepanjem v bazi.
-- **Periodično osveževanje cenika** ([ADR-0007](adr/0007-periodicno-osvezevanje-cenika.md)): pri spremembah na 30 sekund cenik poizveduje vsakih 5 s ([ADR-0008](adr/0008-kratka-obdobja-in-zvezno-cenovno-pravilo.md)); WebSocket je predviden kot kasnejša nadgradnja.
+- **Periodično osveževanje cenika** ([ADR-0007](adr/0007-periodicno-osvezevanje-cenika.md)): ker se cene spreminjajo sproti, cenik poizveduje vsaki 2 s ([ADR-0009](adr/0009-takojsen-dvig-ob-prodaji-in-eksponentno-ohlajanje.md)); WebSocket je predviden kot kasnejša nadgradnja.
 
 Podrobna utemeljitev, alternative in posledice so v [`adr/`](adr/).
 

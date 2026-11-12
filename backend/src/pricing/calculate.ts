@@ -2,37 +2,56 @@ import { Prisma } from "@prisma/client";
 
 type DecimalLike = Prisma.Decimal | number | string;
 
-/** Rast na obdobje: 1 % × ln(1 + prodane enote), največ 3 %. */
-export const DEMAND_SENSITIVITY = new Prisma.Decimal("0.01");
-export const MAX_INCREASE = new Prisma.Decimal("0.03");
-/** Padec na obdobje brez prodaje: hitrejši nad osnovno ceno, počasnejši pod njo. */
-export const DECAY_ABOVE_BASE = new Prisma.Decimal("0.005");
-export const DECAY_AT_OR_BELOW_BASE = new Prisma.Decimal("0.002");
-/** Najmanjša sprememba, da zaokroževanje ne zamrzne poceni pijač. */
+/** Skok ob prodaji: 2 % × ln(1 + prodane enote), največ 6 %. */
+export const SALE_IMPACT = 0.02;
+export const MAX_SALE_JUMP = 0.06;
+/** Razpolovni čas ohlajanja: nad osnovno ceno proti osnovni, pri ali pod njo proti min_price. */
+export const HALF_LIFE_ABOVE_BASE_MS = 3 * 60 * 1000;
+export const HALF_LIFE_BELOW_BASE_MS = 30 * 60 * 1000;
+/** Najmanjši skok ob prodaji, da zaokroževanje ne zamrzne poceni pijač. */
 export const MIN_STEP = new Prisma.Decimal("0.01");
 
-export interface PriceInput {
+export interface PriceState {
   currentPrice: DecimalLike;
   basePrice: DecimalLike;
   minPrice: DecimalLike;
   maxPrice: DecimalLike;
-  unitsSold: number;
+}
+
+const toCents = (value: number, { minPrice, maxPrice }: Pick<PriceState, "minPrice" | "maxPrice">) => {
+  const rounded = new Prisma.Decimal(value).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
+  return Prisma.Decimal.min(Prisma.Decimal.max(rounded, minPrice), maxPrice);
+};
+
+/**
+ * Cena takoj po prodaji: skok za 2 % × ln(1 + enote) (padajoči donos, največ +6 %),
+ * vsaj za 0,01 € in največ do max_price.
+ */
+export function priceAfterSale(state: PriceState, unitsSold: number): Prisma.Decimal {
+  const current = new Prisma.Decimal(state.currentPrice);
+  const jump = Math.min(SALE_IMPACT * Math.log1p(unitsSold), MAX_SALE_JUMP);
+  const next = toCents(current.toNumber() * (1 + jump), state);
+  return next.gt(current) ? next : Prisma.Decimal.min(current.plus(MIN_STEP), state.maxPrice);
 }
 
 /**
- * Nova cena za eno obdobje.
- * Prodaja dvigne ceno sorazmerno z ln(1 + enote) (padajoči donos, največ +3 %),
- * obdobje brez prodaje jo zniža za 0,5 % nad osnovno ceno oziroma 0,2 % pri ali pod njej.
- * Rezultat je zaokrožen na 0,01 €, se premakne vsaj za 0,01 € in je omejen na [min_price, max_price].
+ * Cena po `idleMs` brez prodaje. Odmik se razpolavlja: nad osnovno ceno vsake 3 minute
+ * proti osnovni ceni (skok se hitro ohladi), pri ali pod njo vsakih 30 minut proti min_price
+ * (pijača brez povpraševanja se počasi ceni). Padec je zato sprva hiter in se nato umirja.
  */
-export function calculateNewPrice({ currentPrice, basePrice, minPrice, maxPrice, unitsSold }: PriceInput): Prisma.Decimal {
-  const current = new Prisma.Decimal(currentPrice);
-  const rate =
-    unitsSold > 0
-      ? Prisma.Decimal.min(new Prisma.Decimal(unitsSold).plus(1).ln().mul(DEMAND_SENSITIVITY), MAX_INCREASE)
-      : (current.gt(basePrice) ? DECAY_ABOVE_BASE : DECAY_AT_OR_BELOW_BASE).neg();
+export function priceAfterIdle(state: PriceState, idleMs: number): Prisma.Decimal {
+  const base = new Prisma.Decimal(state.basePrice).toNumber();
+  const min = new Prisma.Decimal(state.minPrice).toNumber();
+  let price = new Prisma.Decimal(state.currentPrice).toNumber();
+  let ms = Math.max(idleMs, 0);
 
-  let next = current.mul(rate.plus(1)).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
-  if (next.equals(current)) next = rate.isNeg() ? current.minus(MIN_STEP) : current.plus(MIN_STEP);
-  return Prisma.Decimal.min(Prisma.Decimal.max(next, minPrice), maxPrice);
+  if (price > base) {
+    const gap = price - base;
+    // Odmik pod pol centa se zaokroži na osnovno ceno; preostali čas teče že pod njo.
+    const msToBase = HALF_LIFE_ABOVE_BASE_MS * Math.log2(gap / 0.005);
+    if (ms < msToBase) return toCents(base + gap * 0.5 ** (ms / HALF_LIFE_ABOVE_BASE_MS), state);
+    price = base;
+    ms -= msToBase;
+  }
+  return toCents(min + (price - min) * 0.5 ** (ms / HALF_LIFE_BELOW_BASE_MS), state);
 }

@@ -10,7 +10,7 @@ export async function resetDb() {
 
 export async function createDrink(overrides: Partial<{
   name: string; category: string; basePrice: number; currentPrice: number;
-  minPrice: number; maxPrice: number; active: boolean;
+  minPrice: number; maxPrice: number; active: boolean; priceUpdatedAt: Date;
 }> = {}) {
   const basePrice = overrides.basePrice ?? 3;
   return prisma.drink.create({

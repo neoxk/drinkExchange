@@ -1,5 +1,5 @@
 ---
-status: sprejeto
+status: nadomeščeno z [ADR-0009](0009-takojsen-dvig-ob-prodaji-in-eksponentno-ohlajanje.md)
 date: 2026-11-12
 nadomešča: [ADR-0004](0004-strezniski-izracun-cen-s-periodicnim-opravilom.md)
 ---

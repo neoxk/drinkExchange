@@ -1,11 +1,12 @@
 import { useCallback } from "react";
 import { Link } from "react-router-dom";
+import { LivePrice } from "../components/LivePrice";
 import { PriceChange } from "../components/PriceChange";
 import { api, formatEur } from "../lib/api";
 import type { PublicDrink } from "../lib/types";
 import { usePolling } from "../lib/usePolling";
 
-const REFRESH_MS = 5_000;
+const REFRESH_MS = 2_000;
 
 export function PriceListPage() {
   const load = useCallback(() => api<PublicDrink[]>("/drinks"), []);
@@ -32,7 +33,7 @@ export function PriceListPage() {
                 <span className="spacer" />
                 <span className="badge">{d.category}</span>
               </div>
-              <div className="ticker-price">{formatEur(d.currentPrice)}</div>
+              <LivePrice price={d.currentPrice} />
               <PriceChange change={d.change} percent={d.changePercent} />
               <div className="muted small">Osnovna cena {formatEur(d.basePrice)}</div>
             </Link>

@@ -1,24 +1,21 @@
 import cron from "node-cron";
-import { processPeriod } from "./process-period.js";
-import { previousPeriodStart } from "./period.js";
+import { coolPrices } from "./market.js";
 
-async function runForPreviousPeriod() {
+async function run() {
   try {
-    const result = await processPeriod(previousPeriodStart(new Date()));
-    const label = result.periodStart.toISOString();
-    if (result.status === "processed") console.log(`[cene] obdobje ${label}: preračunanih ${result.drinks} pijač`);
-    else console.log(`[cene] obdobje ${label} preskočeno: ${result.reason}`);
+    const changed = await coolPrices();
+    if (changed > 0) console.log(`[cene] ohlajanje: spremenjenih ${changed} cen`);
   } catch (e) {
-    console.error("[cene] napaka pri izračunu cen", e);
+    console.error("[cene] napaka pri ohlajanju cen", e);
   }
 }
 
 /**
- * Ob vsaki polni in pol minute (UTC) obdela pravkar zaključeno obdobje.
- * Ob zagonu nadoknadi zadnje obdobje, če ga strežnik ni obdelal (npr. zaradi ponovnega zagona).
+ * Vsakih 5 sekund ohladi cene. Ob zagonu takoj nadoknadi čas, ko strežnik ni tekel.
+ * Dvigi cen se ne zgodijo tukaj, ampak takoj ob zaključku naročila.
  */
 export function startPriceJob() {
-  const task = cron.schedule("*/30 * * * * *", runForPreviousPeriod, { timezone: "Etc/UTC" });
-  void runForPreviousPeriod();
+  const task = cron.schedule("*/5 * * * * *", run);
+  void run();
   return task;
 }

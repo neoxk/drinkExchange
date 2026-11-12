@@ -44,7 +44,8 @@ export async function createDrink(input: DrinkInput) {
 }
 
 /**
- * Posodobi pijačo. Trenutna cena se ohrani, po potrebi pa se premakne v nove meje.
+ * Posodobi pijačo. Trenutna cena se ohrani, po potrebi pa se premakne v nove meje;
+ * ohlajanje cene začne teči na novo.
  * Zaklenjene cene na postavkah in zgodovina cen se ne spreminjajo.
  */
 export async function updateDrink(id: string, patch: Partial<DrinkInput>) {
@@ -57,6 +58,6 @@ export async function updateDrink(id: string, patch: Partial<DrinkInput>) {
   };
   assertPriceLimits(limits);
   const currentPrice = Money.min(Money.max(drink.currentPrice, limits.minPrice), limits.maxPrice);
-  const updated = await prisma.drink.update({ where: { id }, data: { ...patch, currentPrice } });
+  const updated = await prisma.drink.update({ where: { id }, data: { ...patch, currentPrice, priceUpdatedAt: new Date() } });
   return toAdminDrink(updated);
 }

@@ -79,6 +79,10 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .ticker { display: grid; gap: 0.35rem; color: inherit; text-decoration: none; }
 .ticker-price { font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 a.ticker:hover { border-color: var(--accent); }
+@keyframes flash-up { from { color: var(--up); text-shadow: 0 0 14px var(--up); } }
+@keyframes flash-down { from { color: var(--down); text-shadow: 0 0 14px var(--down); } }
+.flash-up { animation: flash-up 1.5s ease-out; }
+.flash-down { animation: flash-down 1.5s ease-out; }
 .chart { width: 100%; min-height: 300px; }
 
 .order-layout { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); align-items: start; }
