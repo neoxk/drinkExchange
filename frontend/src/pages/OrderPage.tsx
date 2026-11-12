@@ -12,7 +12,7 @@ export function OrderPage() {
   const [error, setError] = useState<string | null>(null);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const loadDrinks = useCallback(() => api<PublicDrink[]>("/drinks"), []);
-  const { data: drinks } = usePolling(loadDrinks, 60_000);
+  const { data: drinks } = usePolling(loadDrinks, 10_000);
 
   useEffect(() => {
     api<Order>(`/orders/${id}`).then(setOrder, (e: Error) => setError(e.message));

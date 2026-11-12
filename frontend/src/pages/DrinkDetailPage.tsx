@@ -9,7 +9,7 @@ import { usePolling } from "../lib/usePolling";
 export function DrinkDetailPage() {
   const { id } = useParams();
   const load = useCallback(() => api<DrinkHistory>(`/drinks/${id}/history`), [id]);
-  const { data, error } = usePolling(load, 60_000);
+  const { data, error } = usePolling(load, 5_000);
 
   if (error) {
     return (
@@ -34,10 +34,10 @@ export function DrinkDetailPage() {
         <PriceChange change={drink.change} percent={drink.changePercent} />
         <span className="muted">Osnovna cena {formatEur(drink.basePrice)}</span>
       </div>
-      <h2>Gibanje cene v zadnjih 24 urah</h2>
+      <h2>Gibanje cene v zadnji uri</h2>
       <div className="card">
         {history.length === 0 ? (
-          <p className="muted">Za to pijačo v zadnjih 24 urah še ni zabeleženih sprememb cene.</p>
+          <p className="muted">Za to pijačo v zadnji uri še ni zabeleženih sprememb cene.</p>
         ) : (
           <PriceChart history={history} />
         )}

@@ -42,7 +42,7 @@ export function PriceChart({ history }: { history: HistoryPoint[] }) {
             width={48}
           />
           <Tooltip content={<ChartTooltip />} />
-          <Line type="stepAfter" dataKey="price" stroke="var(--accent)" strokeWidth={2} dot={{ r: 3 }} />
+          <Line type="stepAfter" dataKey="price" stroke="var(--accent)" strokeWidth={2} dot={data.length <= 30 ? { r: 3 } : false} />
         </LineChart>
       </ResponsiveContainer>
     </div>

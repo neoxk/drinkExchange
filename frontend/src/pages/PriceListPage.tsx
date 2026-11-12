@@ -5,7 +5,7 @@ import { api, formatEur } from "../lib/api";
 import type { PublicDrink } from "../lib/types";
 import { usePolling } from "../lib/usePolling";
 
-const REFRESH_MS = 60_000;
+const REFRESH_MS = 5_000;
 
 export function PriceListPage() {
   const load = useCallback(() => api<PublicDrink[]>("/drinks"), []);
