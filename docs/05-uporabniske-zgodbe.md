@@ -16,12 +16,12 @@ Kriteriji sprejemljivosti:
 - Stran deluje brez prijave in je uporabna na mobilnem telefonu.
 
 ### US-02 – Zgodovina in trend cene pijače
-**Kot** gost **želim** videti, kako se je cena izbrane pijače spreminjala v zadnjih 24 urah, **da** ocenim, ali cena raste ali pada.
+**Kot** gost **želim** videti, kako se je cena izbrane pijače spreminjala v zadnji uri, **da** ocenim, ali cena raste ali pada.
 *Funkcionalnost:* #5
 
 Kriteriji sprejemljivosti:
-- Ob izbiri pijače se prikaže graf cen za zadnjih 24 ur.
-- Vsaka točka grafa ustreza enemu 30-minutnemu obdobju (čas, cena, prodana količina).
+- Ob izbiri pijače se prikaže graf cen za zadnjo uro.
+- Vsaka točka grafa ustreza enemu 30-sekundnemu obdobju (čas, cena, prodana količina).
 - Če zgodovine še ni, je prikazano ustrezno sporočilo.
 - Zahteva za neobstoječo ali neaktivno pijačo vrne 404.
 
@@ -68,14 +68,14 @@ Kriteriji sprejemljivosti:
 - Natakar lahko spreminja samo svoja naročila.
 
 ### US-07 – Samodejni borzni izračun cen
-**Kot** upravitelj **želim**, da sistem vsakih 30 minut sam preračuna cene glede na prodajo, **da** cene sledijo povpraševanju brez ročnega posega.
+**Kot** upravitelj **želim**, da sistem vsakih 30 sekund sam preračuna cene glede na prodajo, **da** cene sledijo povpraševanju brez ročnega posega.
 *Funkcionalnost:* #4
 
 Kriteriji sprejemljivosti:
-- Opravilo se zažene na mejah 30-minutnih intervalov (UTC) in obdela predhodno obdobje.
+- Opravilo se zažene na mejah 30-sekundnih intervalov (UTC) in obdela predhodno obdobje.
 - Šteje se vsota količin iz naročil, zaključenih v obdobju; odprta in preklicana naročila se ne štejejo.
-- Količina ≥ 5 → cena × 1,05; količina 0 → cena × 0,95; sicer cena ostane enaka.
-- Cena se zaokroži na 0,01 € in ostane v mejah `min_price`–`max_price`.
+- Količina n ≥ 1 → cena × (1 + min(1 % × ln(1 + n), 3 %)); količina 0 → −0,5 % nad osnovno ceno, sicer −0,2 %.
+- Cena se zaokroži na 0,01 €, se spremeni vsaj za 0,01 € in ostane v mejah `min_price`–`max_price`.
 - Za vsako pijačo se zapiše vrstica v `PriceHistory`.
 - Isto obdobje se obdela največ enkrat (enolični ključ + transakcija).
 

@@ -16,7 +16,7 @@ DrinkExchange je spletna aplikacija za bar, v katerem se cene pijač spreminjajo
 2. Gost na javni spletni strani spremlja trenutne cene, smer gibanja in zgodovino sprememb. Za ogled ne potrebuje računa.
 3. Gost naroči pijačo pri natakarju. Natakar ustvari naročilo in sistem ob dodajanju postavke shrani trenutno veljavno ceno (ta je za naročilo zaklenjena).
 4. Ko natakar naročilo označi kot zaključeno, se njegove količine vključijo v izračun povpraševanja.
-5. Sistem vsakih 30 minut za vsako pijačo preveri število prodanih enot v preteklih 30 minutah. Če jih je vsaj 5, ceno zviša za 5 %; če jih je 0, jo zniža za 5 %; sicer je ne spremeni. Rezultat se zaokroži na dve decimalki in omeji na nastavljeno najnižjo oziroma najvišjo ceno.
+5. Sistem vsakih 30 sekund za vsako pijačo preveri število prodanih enot v preteklih 30 sekundah. Prodaja ceno zviša za 1 % × ln(1 + enote), največ za 3 %; brez prodaje cena pade za 0,5 %, če je nad osnovno ceno, sicer za 0,2 %. Rezultat se zaokroži na dve decimalki (z najmanjšim korakom 0,01 €) in omeji na nastavljeno najnižjo oziroma najvišjo ceno.
 6. Nova cena se prikaže gostom in natakarjem, sprememba pa se shrani za graf zgodovine cen.
 
 **Primer:** Osnovna cena limonade je 4,00 €, dovoljeni razpon je od 3,00 € do 6,00 €. Če se v enem 30-minutnem obdobju proda šest limonad, se cena za naslednje obdobje zviša na 4,20 €. Že ustvarjena naročila obdržijo prvotno ceno.

@@ -25,7 +25,7 @@ flowchart LR
 | Metoda in pot | Dostop | Naloga |
 |---|---|---|
 | `GET /api/drinks` | javno | Trenutni cenik in spremembe cen. |
-| `GET /api/drinks/:id/history` | javno | Zgodovina cen izbrane pijače (24 ur). |
+| `GET /api/drinks/:id/history` | javno | Zgodovina cen izbrane pijače (zadnja ura). |
 | `POST /api/auth/login` | javno | Prijava zaposlenega. |
 | `POST /api/auth/logout` | prijavljen | Odjava. |
 | `POST /api/orders` | natakar, upravitelj | Ustvari odprto naročilo. |
@@ -80,15 +80,15 @@ DrinkExchange/
 - **React + REST API** ([ADR-0001](adr/0001-locen-react-frontend-in-rest-api.md)): ločitev uporabniškega vmesnika od poslovnih pravil; cenovna pravila so enotna za vse odjemalce.
 - **PostgreSQL** ([ADR-0002](adr/0002-relacijska-baza-postgresql.md)): relacije med naročili, postavkami in pijačami ter transakcije zmanjšajo tveganje za nepravilne cene.
 - **Zaklenjena cena postavke** ([ADR-0003](adr/0003-zaklenjena-cena-postavke.md)): naročilo obdrži ceno, veljavno ob dodajanju, tudi če se pozneje spremeni borzna cena.
-- **Strežniški cenovni algoritem** ([ADR-0004](adr/0004-strezniski-izracun-cen-s-periodicnim-opravilom.md)): prepreči, da bi odjemalec sam določal obračunske cene ali povpraševanje.
+- **Strežniški cenovni algoritem** ([ADR-0004](adr/0004-strezniski-izracun-cen-s-periodicnim-opravilom.md), [ADR-0008](adr/0008-kratka-obdobja-in-zvezno-cenovno-pravilo.md)): prepreči, da bi odjemalec sam določal obračunske cene ali povpraševanje.
 - **Seje in RBAC** ([ADR-0005](adr/0005-seje-v-piskotkih-in-rbac.md)): javna registracija ni potrebna; vloge zaposlenih se preverjajo centralno na strežniku.
 - **En sam backend v MVP** ([ADR-0006](adr/0006-ena-instanca-backenda-v-mvp.md)): poenostavi časovno opravilo; pri kasnejšem skaliranju se opravilo loči v samostojen proces z zaklepanjem v bazi.
-- **Periodično osveževanje cenika** ([ADR-0007](adr/0007-periodicno-osvezevanje-cenika.md)): pri spremembah na 30 minut zadošča poizvedovanje vsako minuto; WebSocket je predviden kot kasnejša nadgradnja.
+- **Periodično osveževanje cenika** ([ADR-0007](adr/0007-periodicno-osvezevanje-cenika.md)): pri spremembah na 30 sekund cenik poizveduje vsakih 5 s ([ADR-0008](adr/0008-kratka-obdobja-in-zvezno-cenovno-pravilo.md)); WebSocket je predviden kot kasnejša nadgradnja.
 
 Podrobna utemeljitev, alternative in posledice so v [`adr/`](adr/).
 
 ## Osnovni testi
-- Algoritem zviša ceno za 5 % pri 5 ali več prodanih enotah in zniža za 5 % pri nič prodanih enotah.
+- Algoritem zviša ceno sorazmerno z ln(1 + prodane enote), največ za 3 %, in jo brez prodaje zniža za 0,5 % nad oziroma 0,2 % pri ali pod osnovno ceno.
 - Cena nikoli ne preseže `min_price` oziroma `max_price`.
 - Preklicana in odprta naročila ne vplivajo na izračun.
 - Ponovna obdelava istega časovnega intervala ne spremeni cene še enkrat.
