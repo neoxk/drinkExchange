@@ -17,9 +17,53 @@ DrinkExchange je spletna aplikacija za bar, v katerem se cene pijač spreminjajo
 
 ```text
 .
-├── frontend/   # React aplikacija (v pripravi)
-├── backend/    # Express API, cenovno opravilo, Prisma (v pripravi)
-└── docs/       # projektna dokumentacija in ADR
+├── frontend/            # React + Vite aplikacija
+├── backend/             # Express API, cenovno opravilo, Prisma
+│   ├── prisma/          # shema, migracije, seed
+│   ├── src/
+│   └── test/            # Vitest + Supertest
+├── docker/              # inicializacija baze
+├── docker-compose.yml   # PostgreSQL za lokalni razvoj
+└── docs/                # projektna dokumentacija in ADR
+```
+
+## Lokalni zagon
+
+### Predpogoji
+- Node.js 20.19+ (preizkušeno z Node 26) in npm
+- Docker z Docker Compose
+
+### 1. Podatkovna baza
+```bash
+docker compose up -d
+```
+PostgreSQL teče na `localhost:5434` (drug port nastaviš z `DB_PORT=5440 docker compose up -d` in ustrezno popraviš `DATABASE_URL`). Ob prvem zagonu se ustvarita bazi `drinkexchange` in `drinkexchange_test`.
+
+### 2. Backend (http://localhost:3000)
+```bash
+cd backend
+cp .env.example .env      # po želji nastavi SESSION_SECRET
+npm install
+npx prisma migrate dev    # ustvari tabele
+npm run seed              # vzorčne pijače
+npm run dev
+```
+
+### 3. Frontend (http://localhost:5173)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Vite preusmeri zahteve na `/api` na backend (`http://localhost:3000`, spremeniš z `API_URL`).
+
+### Testi in preverjanje kode
+```bash
+cd backend
+npm test          # uporablja bazo drinkexchange_test (.env.test)
+npm run lint
+npm run typecheck
+cd ../frontend && npm run lint && npm run build
 ```
 
 ## Dokumentacija

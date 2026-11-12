@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  WAITER
+  MANAGER
+}
+
+enum OrderStatus {
+  OPEN
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         Role
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  orders       Order[]
+
+  @@map("users")
+}
+
+model Drink {
+  id           String         @id @default(uuid()) @db.Uuid
+  name         String
+  category     String
+  basePrice    Decimal        @map("base_price") @db.Decimal(10, 2)
+  currentPrice Decimal        @map("current_price") @db.Decimal(10, 2)
+  minPrice     Decimal        @map("min_price") @db.Decimal(10, 2)
+  maxPrice     Decimal        @map("max_price") @db.Decimal(10, 2)
+  active       Boolean        @default(true)
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  orderItems   OrderItem[]
+  priceHistory PriceHistory[]
+
+  @@map("drinks")
+}
+
+model Order {
+  id          String      @id @default(uuid()) @db.Uuid
+  waiterId    String      @map("waiter_id") @db.Uuid
+  waiter      User        @relation(fields: [waiterId], references: [id])
+  status      OrderStatus @default(OPEN)
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  completedAt DateTime?   @map("completed_at") @db.Timestamptz
+  items       OrderItem[]
+
+  @@index([status, completedAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(uuid()) @db.Uuid
+  orderId   String  @map("order_id") @db.Uuid
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  drinkId   String  @map("drink_id") @db.Uuid
+  drink     Drink   @relation(fields: [drinkId], references: [id])
+  quantity  Int
+  unitPrice Decimal @map("unit_price") @db.Decimal(10, 2)
+
+  @@map("order_items")
+}
+
+model PriceHistory {
+  id          String   @id @default(uuid()) @db.Uuid
+  drinkId     String   @map("drink_id") @db.Uuid
+  drink       Drink    @relation(fields: [drinkId], references: [id])
+  periodStart DateTime @map("period_start") @db.Timestamptz
+  oldPrice    Decimal  @map("old_price") @db.Decimal(10, 2)
+  newPrice    Decimal  @map("new_price") @db.Decimal(10, 2)
+  unitsSold   Int      @map("units_sold")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@unique([drinkId, periodStart])
+  @@map("price_history")
+}
+
+// Tabela za connect-pg-simple (strežniške seje)
+model Session {
+  sid    String   @id @db.VarChar
+  sess   Json     @db.Json
+  expire DateTime @db.Timestamp(6)
+
+  @@index([expire], map: "IDX_session_expire")
+  @@map("session")
+}
