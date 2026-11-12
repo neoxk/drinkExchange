@@ -20,3 +20,14 @@ export interface DrinkHistory {
   drink: PublicDrink;
   history: HistoryPoint[];
 }
+
+export type Role = "WAITER" | "MANAGER";
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  active: boolean;
+  createdAt: string;
+}

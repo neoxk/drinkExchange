@@ -3,15 +3,15 @@
   "version": "1.0.0",
   "description": "DrinkExchange REST API",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "dotenv -e .env -- tsx watch src/server.ts",
     "build": "tsc -p tsconfig.build.json",
-    "start": "node dist/src/server.js",
+    "start": "dotenv -e .env -- node dist/src/server.js",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "dotenv -e .env.test -- vitest run",
     "db:migrate": "prisma migrate dev",
     "seed": "prisma db seed",
-    "create-manager": "tsx src/scripts/create-manager.ts"
+    "create-manager": "dotenv -e .env -- tsx src/scripts/create-manager.ts"
   },
   "type": "module",
   "dependencies": {
