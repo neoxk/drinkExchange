@@ -1,5 +1,5 @@
 ---
-status: sprejeto
+status: nadomeščeno z [ADR-0008](0008-kratka-obdobja-in-zvezno-cenovno-pravilo.md)
 date: 2026-10-29
 ---
 

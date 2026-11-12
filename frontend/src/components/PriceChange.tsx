@@ -4,7 +4,7 @@ export function PriceChange({ change, percent }: { change: string; percent: numb
   const arrow = value > 0 ? "▲" : value < 0 ? "▼" : "■";
   const sign = value > 0 ? "+" : "";
   return (
-    <span className={cls} aria-label={value > 0 ? "rast" : value < 0 ? "padec" : "brez spremembe"}>
+    <span className={cls} title="Sprememba v zadnjih 5 minutah" aria-label={value > 0 ? "rast" : value < 0 ? "padec" : "brez spremembe"}>
       {arrow} {sign}{value.toFixed(2)} € ({sign}{percent.toFixed(2)} %)
     </span>
   );

@@ -11,7 +11,7 @@ Relacijska baza **PostgreSQL**. Primarni ključi so `UUID`, časovni žigi `TIME
 | **Drink** | `id` PK, `name`, `category`, `base_price`, `current_price`, `min_price`, `max_price`, `active`, `created_at` | Ponudba pijač z omejitvami cen. |
 | **Order** | `id` PK, `waiter_id` FK → User, `status` (`OPEN`, `COMPLETED`, `CANCELLED`), `created_at`, `completed_at` NULL | Naročilo, ki ga evidentira natakar. |
 | **OrderItem** | `id` PK, `order_id` FK → Order, `drink_id` FK → Drink, `quantity`, `unit_price`, `created_at` | Postavka naročila z zaklenjeno ceno ob dodajanju. |
-| **PriceHistory** | `id` PK, `drink_id` FK → Drink, `period_start`, `old_price`, `new_price`, `units_sold`, `created_at` | Zapis izračuna cen za posamezno obdobje. |
+| **PriceHistory** | `id` PK, `drink_id` FK → Drink, `changed_at`, `old_price`, `new_price`, `units_sold`, `created_at` | Zapis spremembe cene: prodaja (`units_sold > 0`) ali ohlajanje (`units_sold = 0`). |
 
 ## Povezave
 - **User 1 : N Order** – en natakar lahko vnese več naročil; vsako naročilo ima natakarja.
@@ -45,6 +45,7 @@ erDiagram
         decimal current_price
         decimal min_price
         decimal max_price
+        datetime price_updated_at
         boolean active
         datetime created_at
     }
@@ -65,7 +66,7 @@ erDiagram
     PRICE_HISTORY {
         uuid id PK
         uuid drink_id FK
-        datetime period_start
+        datetime changed_at
         decimal old_price
         decimal new_price
         integer units_sold
@@ -77,20 +78,18 @@ erDiagram
 - `quantity > 0`; `base_price > 0`; `min_price > 0`; `min_price <= base_price <= max_price`; `min_price <= current_price <= max_price`.
 - `unit_price` se ob dodajanju postavke prekopira iz `Drink.current_price`; poznejše spremembe cene ne vplivajo na naročilo.
 - `Order.completed_at` se določi ob prehodu v `COMPLETED`. Samo status `COMPLETED` vpliva na prodano količino.
-- `UNIQUE(drink_id, period_start)` v `PriceHistory` preprečuje dvojni zapis istega obdobja.
-- Izračun in shranjevanje novih cen za eno obdobje potekata v podatkovni transakciji; opravilo uporablja zaklep, da se isto obdobje ne obračuna dvakrat.
+- `Drink.price_updated_at` je trenutek zadnje spremembe cene; ohlajanje se računa iz časa, ki je pretekel od njega, zato ponovni zagon opravila cene ne zniža dvakrat.
+- Dvig cene in zapis v `PriceHistory` potekata v isti transakciji kot zaključek naročila; vrstice pijač so pri tem zaklenjene, da se hkratne prodaje seštejejo.
+- Indeks `(drink_id, changed_at)` v `PriceHistory` podpira poizvedbe za graf in trend.
 - Naročil, postavk in zapisov zgodovine ne brišemo fizično; pijačo lahko označimo kot neaktivno, da ostanejo zgodovinski podatki pravilni.
 
-## Primer poizvedbe za povpraševanje
+## Primer poizvedbe za trend na ceniku
 
 ```sql
-SELECT oi.drink_id, SUM(oi.quantity) AS units_sold
-FROM order_items oi
-JOIN orders o ON o.id = oi.order_id
-WHERE o.status = 'COMPLETED'
-  AND o.completed_at >= :period_start
-  AND o.completed_at < :period_end
-GROUP BY oi.drink_id;
+SELECT DISTINCT ON (drink_id) drink_id, old_price AS price_5_min_ago
+FROM price_history
+WHERE changed_at >= now() - interval '5 minutes'
+ORDER BY drink_id, changed_at;
 ```
 
-Za pijače brez vrnjene vrstice je `units_sold = 0`. Upoštevamo polodprt interval `[period_start, period_end)`, zato eno naročilo ne more šteti v dve obdobji.
+Stara cena prve spremembe v oknu je cena na začetku okna. Za pijače brez vrnjene vrstice se cena v zadnjih 5 minutah ni spremenila.

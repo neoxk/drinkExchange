@@ -14,11 +14,11 @@ Gost nima uporabniškega računa. Račune natakarjev in upraviteljev ustvari upr
 
 | # | Funkcionalnost | MVP | Opis |
 |---|---|---|---|
-| 1 | Javni borzni cenik | **MVP** | Gost vidi trenutno ceno, osnovno ceno in spremembo glede na prejšnje obdobje za vsako aktivno pijačo. |
+| 1 | Javni borzni cenik | **MVP** | Gost vidi trenutno ceno, osnovno ceno in spremembo v zadnjih 5 minutah za vsako aktivno pijačo. |
 | 2 | Evidentiranje naročil pri natakarju | **MVP** | Natakar izbira pijače in količine; pri dodajanju postavke sistem shrani veljavno ceno. |
 | 3 | Zaključevanje in preklic naročil | **MVP** | Samo zaključena naročila vplivajo na povpraševanje; preklicana ne. |
-| 4 | Samodejni borzni izračun cen | **MVP** | Vsakih 30 minut sistem preračuna ceno glede na prodane količine in cenovne meje. |
-| 5 | Zgodovina in trend cen | **MVP** | Gost vidi zadnjih 24 ur sprememb za posamezno pijačo. |
+| 4 | Samodejni borzni izračun cen | **MVP** | Prodaja ceno takoj zviša, med prodajami se cena ohlaja proti osnovni ceni; vedno ostane v cenovnih mejah. |
+| 5 | Zgodovina in trend cen | **MVP** | Gost vidi zadnjo uro sprememb za posamezno pijačo. |
 | 6 | Upravljanje ponudbe in cenovnih omejitev | **MVP** | Upravitelj določi aktivne pijače, osnovne cene ter dovoljeni minimum in maksimum. |
 | 7 | Prijava zaposlenih in dovoljenja po vlogah | **MVP** | Natakar in upravitelj dostopata le do dovoljenih funkcij. |
 | 8 | Pregled najbolj prodajanih pijač | Ne | Upravitelj spremlja razvrstitev po prodani količini v izbranem obdobju. |
@@ -27,14 +27,14 @@ Gost nima uporabniškega računa. Račune natakarjev in upraviteljev ustvari upr
 | 11 | Simulacija gibanja cen | Ne | Upravitelj lahko s testnimi količinami preveri predvideno novo ceno brez spremembe podatkov. |
 | 12 | Izvoz poročila o prodaji | Ne | Upravitelj izvozi seznam zaključenih naročil v CSV. |
 
-**MVP: 7 funkcionalnosti.** Domensko specifične so zlasti št. 1, 4 in 5 (tudi 6 je prilagojena borznemu modelu). Osnovni delovni proces je: **ustvari naročilo → zakleni cene postavk → zaključi naročilo → izračunaj povpraševanje → posodobi in zabeleži cene → prikaži nove tečaje**.
+**MVP: 7 funkcionalnosti.** Domensko specifične so zlasti št. 1, 4 in 5 (tudi 6 je prilagojena borznemu modelu). Osnovni delovni proces je: **ustvari naročilo → zakleni cene postavk → zaključi naročilo → takoj zvišaj in zabeleži cene → ohlajaj cene → prikaži nove tečaje**.
 
 ### Pravila prve različice
-- Čas izračuna: vsakih **30 minut** (strežniški čas; dosledna uporaba UTC za časovne žige).
-- Šteje se vsota količin postavk iz naročil, zaključenih v prejšnjih 30 minutah; odprta in preklicana naročila se izključijo.
-- Če je količina **≥ 5**, se cena pomnoži z **1,05**; če je **0**, z **0,95**; sicer ostane enaka.
-- Cena se zaokroži na **0,01 €**, vendar ne sme pasti pod `min_price` ali preseči `max_price`.
-- Posamezno 30-minutno obdobje se obdela **največ enkrat**; ponovni zagon opravila ne povzroči dodatnega dviga ali padca.
+- Cena se zviša **takoj ob zaključku naročila**; odprta in preklicana naročila nanjo ne vplivajo ([ADR-0009](adr/0009-takojsen-dvig-ob-prodaji-in-eksponentno-ohlajanje.md)).
+- Če naročilo vsebuje **n** enot pijače, se njena cena pomnoži z **1 + min(0,02 × ln(1 + n), 0,06)** in se zviša vsaj za 0,01 €.
+- Brez prodaje se cena **ohlaja**: nad osnovno ceno se odmik od nje razpolovi vsake **3 minute**, pri ali pod njo se odmik od `min_price` razpolovi vsakih **30 minut**. Ohlajanje se preračuna vsakih 5 sekund (strežniški čas, UTC).
+- Cena se zaokroži na **0,01 €** in ne sme pasti pod `min_price` ali preseči `max_price`.
+- Ohlajanje je odvisno samo od časa od zadnje spremembe cene; ponovni ali zamujeni zagon opravila ne povzroči dodatnega padca.
 - Zaključena naročila so nespremenljiva. Plačevanje se opravi zunaj aplikacije.
 
 ## Kasnejše nadgradnje

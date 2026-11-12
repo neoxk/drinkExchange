@@ -71,7 +71,7 @@ describe("upravljanje pijač", () => {
     const waiter = await createUser();
     const drink = await createDrink({ basePrice: 4, currentPrice: 4.8, minPrice: 3, maxPrice: 5 });
     await prisma.order.create({ data: { waiterId: waiter.id, items: { create: { drinkId: drink.id, quantity: 1, unitPrice: 4.8 } } } });
-    await prisma.priceHistory.create({ data: { drinkId: drink.id, periodStart: new Date("2026-01-01T10:00:00Z"), oldPrice: 4.57, newPrice: 4.8, unitsSold: 5 } });
+    await prisma.priceHistory.create({ data: { drinkId: drink.id, changedAt: new Date("2026-01-01T10:00:00Z"), oldPrice: 4.57, newPrice: 4.8, unitsSold: 5 } });
 
     const res = await m.patch(`/api/drinks/${drink.id}`, { maxPrice: 4.5 });
 

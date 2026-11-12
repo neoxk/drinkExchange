@@ -5,6 +5,7 @@ import { prisma } from "../src/db.js";
 import { createDrink, resetDb } from "./helpers.js";
 
 const app = createApp();
+const ago = (minutes: number) => new Date(Date.now() - minutes * 60 * 1000);
 
 describe("GET /api/drinks", () => {
   beforeEach(resetDb);
@@ -34,12 +35,13 @@ describe("GET /api/drinks", () => {
     });
   });
 
-  it("izračuna spremembo glede na prejšnje obdobje", async () => {
+  it("izračuna spremembo glede na ceno pred 5 minutami", async () => {
     const drink = await createDrink({ basePrice: 4, currentPrice: 4.2 });
     await prisma.priceHistory.createMany({
       data: [
-        { drinkId: drink.id, periodStart: new Date("2026-01-01T10:00:00Z"), oldPrice: 3.8, newPrice: 4, unitsSold: 6 },
-        { drinkId: drink.id, periodStart: new Date("2026-01-01T10:30:00Z"), oldPrice: 4, newPrice: 4.2, unitsSold: 5 },
+        { drinkId: drink.id, changedAt: ago(10), oldPrice: 3.8, newPrice: 4, unitsSold: 6 },
+        { drinkId: drink.id, changedAt: ago(2), oldPrice: 4, newPrice: 4.1, unitsSold: 2 },
+        { drinkId: drink.id, changedAt: ago(1), oldPrice: 4.1, newPrice: 4.2, unitsSold: 5 },
       ],
     });
 
@@ -51,11 +53,22 @@ describe("GET /api/drinks", () => {
   it("pri padcu cene vrne negativno spremembo", async () => {
     const drink = await createDrink({ basePrice: 4, currentPrice: 3.8 });
     await prisma.priceHistory.create({
-      data: { drinkId: drink.id, periodStart: new Date("2026-01-01T10:00:00Z"), oldPrice: 4, newPrice: 3.8, unitsSold: 0 },
+      data: { drinkId: drink.id, changedAt: ago(1), oldPrice: 4, newPrice: 3.8, unitsSold: 0 },
     });
 
     const [result] = (await request(app).get("/api/drinks")).body;
 
     expect(result).toMatchObject({ change: "-0.20", changePercent: -5 });
+  });
+
+  it("spremembe, starejše od 5 minut, ne štejejo v trend", async () => {
+    const drink = await createDrink({ basePrice: 4, currentPrice: 4.2 });
+    await prisma.priceHistory.create({
+      data: { drinkId: drink.id, changedAt: ago(6), oldPrice: 4, newPrice: 4.2, unitsSold: 5 },
+    });
+
+    const [result] = (await request(app).get("/api/drinks")).body;
+
+    expect(result).toMatchObject({ previousPrice: "4.20", change: "0.00", changePercent: 0 });
   });
 });

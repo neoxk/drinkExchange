@@ -2,9 +2,15 @@ import type { Drink, PriceHistory } from "@prisma/client";
 import { prisma } from "../db.js";
 import { Money, money } from "../lib/money.js";
 
-/** Pijača za javni cenik s spremembo glede na prejšnje obdobje. */
-export function toPublicDrink(drink: Drink, lastChange?: Pick<PriceHistory, "oldPrice"> | null) {
-  const previous = lastChange?.oldPrice ?? drink.currentPrice;
+/** Okno, v katerem cenik prikazuje trend cene. */
+export const TREND_WINDOW_MS = 5 * 60 * 1000;
+
+/**
+ * Pijača za javni cenik s spremembo v zadnjih 5 minutah.
+ * `firstChange` je prva sprememba v tem oknu; njena stara cena je cena na začetku okna.
+ */
+export function toPublicDrink(drink: Drink, firstChange?: Pick<PriceHistory, "oldPrice"> | null) {
+  const previous = firstChange?.oldPrice ?? drink.currentPrice;
   const change = new Money(drink.currentPrice).minus(previous);
   const changePercent = new Money(previous).isZero()
     ? new Money(0)
@@ -21,29 +27,31 @@ export function toPublicDrink(drink: Drink, lastChange?: Pick<PriceHistory, "old
   };
 }
 
-export async function listPublicDrinks() {
+export async function listPublicDrinks(now = new Date()) {
+  const trendStart = new Date(now.getTime() - TREND_WINDOW_MS);
   const drinks = await prisma.drink.findMany({
     where: { active: true },
     orderBy: [{ category: "asc" }, { name: "asc" }],
-    include: { priceHistory: { orderBy: { periodStart: "desc" }, take: 1 } },
+    include: { priceHistory: { where: { changedAt: { gte: trendStart } }, orderBy: { changedAt: "asc" }, take: 1 } },
   });
   return drinks.map((d) => toPublicDrink(d, d.priceHistory[0]));
 }
 
-const HISTORY_WINDOW_MS = 24 * 60 * 60 * 1000;
+const HISTORY_WINDOW_MS = 60 * 60 * 1000;
 
-/** Zgodovina cen aktivne pijače za zadnjih 24 ur ali null, če pijača ni na voljo. */
+/** Zgodovina cen aktivne pijače za zadnjo uro ali null, če pijača ni na voljo. */
 export async function getDrinkHistory(id: string, now = new Date()) {
   const drink = await prisma.drink.findFirst({ where: { id, active: true } });
   if (!drink) return null;
   const history = await prisma.priceHistory.findMany({
-    where: { drinkId: id, periodStart: { gte: new Date(now.getTime() - HISTORY_WINDOW_MS) } },
-    orderBy: { periodStart: "asc" },
+    where: { drinkId: id, changedAt: { gte: new Date(now.getTime() - HISTORY_WINDOW_MS) } },
+    orderBy: { changedAt: "asc" },
   });
+  const trendStart = now.getTime() - TREND_WINDOW_MS;
   return {
-    drink: toPublicDrink(drink, history.at(-1)),
+    drink: toPublicDrink(drink, history.find((h) => h.changedAt.getTime() >= trendStart)),
     history: history.map((h) => ({
-      periodStart: h.periodStart.toISOString(),
+      changedAt: h.changedAt.toISOString(),
       oldPrice: money(h.oldPrice),
       price: money(h.newPrice),
       unitsSold: h.unitsSold,

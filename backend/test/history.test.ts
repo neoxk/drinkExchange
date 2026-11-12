@@ -5,19 +5,19 @@ import { prisma } from "../src/db.js";
 import { createDrink, resetDb } from "./helpers.js";
 
 const app = createApp();
-const HOUR = 60 * 60 * 1000;
+const MINUTE = 60 * 1000;
 
 describe("GET /api/drinks/:id/history", () => {
   beforeEach(resetDb);
 
-  it("vrne zapise zadnjih 24 ur v časovnem vrstnem redu", async () => {
+  it("vrne zapise zadnje ure v časovnem vrstnem redu", async () => {
     const drink = await createDrink({ basePrice: 3, currentPrice: 3.15 });
     const now = Date.now();
     await prisma.priceHistory.createMany({
       data: [
-        { drinkId: drink.id, periodStart: new Date(now - 25 * HOUR), oldPrice: 2.9, newPrice: 3, unitsSold: 1 },
-        { drinkId: drink.id, periodStart: new Date(now - 1 * HOUR), oldPrice: 3, newPrice: 3.15, unitsSold: 7 },
-        { drinkId: drink.id, periodStart: new Date(now - 2 * HOUR), oldPrice: 3, newPrice: 3, unitsSold: 2 },
+        { drinkId: drink.id, changedAt: new Date(now - 61 * MINUTE), oldPrice: 2.9, newPrice: 3, unitsSold: 1 },
+        { drinkId: drink.id, changedAt: new Date(now - 1 * MINUTE), oldPrice: 3, newPrice: 3.15, unitsSold: 7 },
+        { drinkId: drink.id, changedAt: new Date(now - 2 * MINUTE), oldPrice: 3, newPrice: 3, unitsSold: 2 },
       ],
     });
 

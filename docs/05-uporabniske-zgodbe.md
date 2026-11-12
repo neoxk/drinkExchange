@@ -9,19 +9,19 @@ Zgodbe so zapisane v obliki *Kot \<vloga\> želim \<cilj\>, da \<korist\>.* Vsak
 *Funkcionalnost:* #1
 
 Kriteriji sprejemljivosti:
-- Za vsako aktivno pijačo so prikazani ime, kategorija, trenutna cena, osnovna cena in sprememba glede na prejšnje obdobje (v € in %).
+- Za vsako aktivno pijačo so prikazani ime, kategorija, trenutna cena, osnovna cena in sprememba v zadnjih 5 minutah (v € in %).
 - Rast cene je označena drugače kot padec (barva in puščica).
 - Neaktivne pijače niso prikazane.
-- Cenik se samodejno osveži približno vsako minuto brez ročnega osveževanja strani.
+- Cenik se samodejno osveži vsaki 2 sekundi brez ročnega osveževanja strani; cena ob spremembi zasveti zeleno ali rdeče.
 - Stran deluje brez prijave in je uporabna na mobilnem telefonu.
 
 ### US-02 – Zgodovina in trend cene pijače
-**Kot** gost **želim** videti, kako se je cena izbrane pijače spreminjala v zadnjih 24 urah, **da** ocenim, ali cena raste ali pada.
+**Kot** gost **želim** videti, kako se je cena izbrane pijače spreminjala v zadnji uri, **da** ocenim, ali cena raste ali pada.
 *Funkcionalnost:* #5
 
 Kriteriji sprejemljivosti:
-- Ob izbiri pijače se prikaže graf cen za zadnjih 24 ur.
-- Vsaka točka grafa ustreza enemu 30-minutnemu obdobju (čas, cena, prodana količina).
+- Ob izbiri pijače se prikaže graf cen za zadnjo uro.
+- Graf prikazuje vsako spremembo cene (čas, cena); prodaje so označene s piko in prodano količino.
 - Če zgodovine še ni, je prikazano ustrezno sporočilo.
 - Zahteva za neobstoječo ali neaktivno pijačo vrne 404.
 
@@ -68,16 +68,15 @@ Kriteriji sprejemljivosti:
 - Natakar lahko spreminja samo svoja naročila.
 
 ### US-07 – Samodejni borzni izračun cen
-**Kot** upravitelj **želim**, da sistem vsakih 30 minut sam preračuna cene glede na prodajo, **da** cene sledijo povpraševanju brez ročnega posega.
+**Kot** upravitelj **želim**, da se cena ob prodaji takoj zviša in se brez prodaje sama ohlaja, **da** cene sledijo povpraševanju brez ročnega posega.
 *Funkcionalnost:* #4
 
 Kriteriji sprejemljivosti:
-- Opravilo se zažene na mejah 30-minutnih intervalov (UTC) in obdela predhodno obdobje.
-- Šteje se vsota količin iz naročil, zaključenih v obdobju; odprta in preklicana naročila se ne štejejo.
-- Količina ≥ 5 → cena × 1,05; količina 0 → cena × 0,95; sicer cena ostane enaka.
+- Ob zaključku naročila z n enotami pijače se njena cena takoj pomnoži z 1 + min(2 % × ln(1 + n), 6 %) in se zviša vsaj za 0,01 €; odprta in preklicana naročila cene ne spremenijo.
+- Opravilo vsakih 5 sekund ohladi cene: nad osnovno ceno se odmik od nje razpolovi vsake 3 minute, pri ali pod njo se odmik od `min_price` razpolovi vsakih 30 minut.
 - Cena se zaokroži na 0,01 € in ostane v mejah `min_price`–`max_price`.
-- Za vsako pijačo se zapiše vrstica v `PriceHistory`.
-- Isto obdobje se obdela največ enkrat (enolični ključ + transakcija).
+- Vsaka sprememba cene se zapiše v `PriceHistory` (prodaja s prodano količino, ohlajanje s količino 0).
+- Ohlajanje je odvisno samo od časa od zadnje spremembe cene; ponovni ali zamujeni zagon cene ne zniža dvakrat.
 
 ### US-08 – Upravljanje ponudbe in cenovnih omejitev
 **Kot** upravitelj **želim** dodajati in urejati pijače ter določati osnovno, najnižjo in najvišjo ceno, **da** nadziram ponudbo in razpon gibanja cen.
@@ -115,7 +114,7 @@ Kriteriji sprejemljivosti:
 
 Kriteriji sprejemljivosti:
 - Indeks je povprečna odstotna sprememba cen vseh aktivnih pijač glede na osnovno ceno.
-- Prikazan je na vrhu cenika skupaj s spremembo glede na prejšnje obdobje.
+- Prikazan je na vrhu cenika skupaj s spremembo v zadnjih 5 minutah.
 
 ### US-12 – Filtriranje cenika po kategorijah
 **Kot** gost **želim** filtrirati pijače po kategoriji, **da** hitreje najdem, kar me zanima.

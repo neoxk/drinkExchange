@@ -10,7 +10,7 @@ export interface PublicDrink {
 }
 
 export interface HistoryPoint {
-  periodStart: string;
+  changedAt: string;
   oldPrice: string;
   price: string;
   unitsSold: number;
