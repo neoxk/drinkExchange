@@ -29,3 +29,24 @@ export async function listPublicDrinks() {
   });
   return drinks.map((d) => toPublicDrink(d, d.priceHistory[0]));
 }
+
+const HISTORY_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+/** Zgodovina cen aktivne pijače za zadnjih 24 ur ali null, če pijača ni na voljo. */
+export async function getDrinkHistory(id: string, now = new Date()) {
+  const drink = await prisma.drink.findFirst({ where: { id, active: true } });
+  if (!drink) return null;
+  const history = await prisma.priceHistory.findMany({
+    where: { drinkId: id, periodStart: { gte: new Date(now.getTime() - HISTORY_WINDOW_MS) } },
+    orderBy: { periodStart: "asc" },
+  });
+  return {
+    drink: toPublicDrink(drink, history.at(-1)),
+    history: history.map((h) => ({
+      periodStart: h.periodStart.toISOString(),
+      oldPrice: money(h.oldPrice),
+      price: money(h.newPrice),
+      unitsSold: h.unitsSold,
+    })),
+  };
+}
