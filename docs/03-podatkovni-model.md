@@ -10,7 +10,7 @@ Relacijska baza **PostgreSQL**. Primarni ključi so `UUID`, časovni žigi `TIME
 | **User** | `id` PK, `name`, `email` UNIQUE, `password_hash`, `role` (`WAITER`, `MANAGER`), `active`, `created_at` | Zaposleni s prijavo; gost je anonimen. |
 | **Drink** | `id` PK, `name`, `category`, `base_price`, `current_price`, `min_price`, `max_price`, `active`, `created_at` | Ponudba pijač z omejitvami cen. |
 | **Order** | `id` PK, `waiter_id` FK → User, `status` (`OPEN`, `COMPLETED`, `CANCELLED`), `created_at`, `completed_at` NULL | Naročilo, ki ga evidentira natakar. |
-| **OrderItem** | `id` PK, `order_id` FK → Order, `drink_id` FK → Drink, `quantity`, `unit_price` | Postavka naročila z zaklenjeno ceno ob dodajanju. |
+| **OrderItem** | `id` PK, `order_id` FK → Order, `drink_id` FK → Drink, `quantity`, `unit_price`, `created_at` | Postavka naročila z zaklenjeno ceno ob dodajanju. |
 | **PriceHistory** | `id` PK, `drink_id` FK → Drink, `period_start`, `old_price`, `new_price`, `units_sold`, `created_at` | Zapis izračuna cen za posamezno obdobje. |
 
 ## Povezave

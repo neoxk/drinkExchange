@@ -4,6 +4,7 @@ import { csrfProtection } from "./middleware/csrf.js";
 import { errorHandler } from "./middleware/error.js";
 import { authRouter } from "./routes/auth.js";
 import { drinksRouter } from "./routes/drinks.js";
+import { ordersRouter } from "./routes/orders.js";
 import { createSessionMiddleware } from "./session.js";
 
 export function createApp() {
@@ -19,6 +20,7 @@ export function createApp() {
 
   app.use("/api/auth", authRouter);
   app.use("/api/drinks", drinksRouter);
+  app.use("/api/orders", ordersRouter);
 
   app.use("/api", (_req, res) => {
     res.status(404).json({ error: "Ni najdeno" });
