@@ -65,14 +65,19 @@ export async function addItem(orderId: string, user: User, input: { drinkId: str
 
 export interface OrderFilter {
   status?: OrderStatus;
+  waiterId?: string;
+  from?: Date;
+  to?: Date;
 }
 
-/** Natakar dobi svoja naročila, upravitelj vsa. */
+/** Natakar dobi svoja naročila, upravitelj vsa (s filtrom po natakarju). Datum velja za čas ustvarjanja. */
 export async function listOrders(user: User, filter: OrderFilter = {}) {
+  const waiterId = user.role === "WAITER" ? user.id : filter.waiterId;
   const orders = await prisma.order.findMany({
     where: {
-      ...(user.role === "WAITER" ? { waiterId: user.id } : {}),
+      ...(waiterId ? { waiterId } : {}),
       ...(filter.status ? { status: filter.status } : {}),
+      ...(filter.from || filter.to ? { createdAt: { gte: filter.from, lt: filter.to } } : {}),
     },
     include: orderInclude,
     orderBy: { createdAt: "desc" },

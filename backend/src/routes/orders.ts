@@ -16,6 +16,9 @@ const addItemSchema = z.object({
 
 const listQuery = z.object({
   status: z.enum(["OPEN", "COMPLETED", "CANCELLED"]).optional(),
+  waiterId: z.uuid().optional(),
+  from: z.coerce.date().optional(),
+  to: z.coerce.date().optional(),
 });
 
 const statusSchema = z.object({
