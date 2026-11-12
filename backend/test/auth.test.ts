@@ -16,8 +16,9 @@ describe("prijava in odjava", () => {
     const res = await request(app).post("/api/auth/login").send({ email: "ANA@bar.si ", password: TEST_PASSWORD });
 
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ id: user.id, name: "Ana", role: "WAITER" });
-    expect(res.body).not.toHaveProperty("passwordHash");
+    expect(res.body.user).toMatchObject({ id: user.id, name: "Ana", role: "WAITER" });
+    expect(res.body.user).not.toHaveProperty("passwordHash");
+    expect(res.body.csrfToken).toEqual(expect.any(String));
     const cookie = res.headers["set-cookie"][0];
     expect(cookie).toMatch(/^dx\.sid=/);
     expect(cookie).toMatch(/HttpOnly/);
@@ -32,7 +33,7 @@ describe("prijava in odjava", () => {
     const res = await agent.get("/api/auth/me");
 
     expect(res.status).toBe(200);
-    expect(res.body.id).toBe(user.id);
+    expect(res.body.user.id).toBe(user.id);
   });
 
   it("napačno geslo, neznana e-pošta in deaktiviran račun vrnejo enako napako", async () => {
@@ -63,7 +64,7 @@ describe("prijava in odjava", () => {
     const login = await agent.post("/api/auth/login").send({ email: "ana@bar.si", password: TEST_PASSWORD });
     const cookie = login.headers["set-cookie"][0].split(";")[0];
 
-    expect((await agent.post("/api/auth/logout")).status).toBe(204);
+    expect((await agent.post("/api/auth/logout").set("X-CSRF-Token", login.body.csrfToken)).status).toBe(204);
 
     expect((await agent.get("/api/auth/me")).status).toBe(401);
     // Tudi star piškotek ne deluje več

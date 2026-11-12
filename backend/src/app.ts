@@ -1,5 +1,6 @@
 import express from "express";
 import { config } from "./config.js";
+import { csrfProtection } from "./middleware/csrf.js";
 import { errorHandler } from "./middleware/error.js";
 import { authRouter } from "./routes/auth.js";
 import { drinksRouter } from "./routes/drinks.js";
@@ -10,6 +11,7 @@ export function createApp() {
   if (config.isProduction) app.set("trust proxy", 1);
   app.use(express.json());
   app.use(createSessionMiddleware());
+  app.use("/api", csrfProtection);
 
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok" });

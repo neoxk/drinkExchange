@@ -12,7 +12,7 @@ export function LoginPage() {
   const [busy, setBusy] = useState(false);
 
   const from = (location.state as { from?: string } | null)?.from;
-  if (user) return <Navigate to={from ?? "/"} replace />;
+  if (user) return <Navigate to={from ?? "/narocila"} replace />;
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -20,7 +20,7 @@ export function LoginPage() {
     setError(null);
     try {
       await login(email, password);
-      navigate(from ?? "/", { replace: true });
+      navigate(from ?? "/narocila", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Prijava ni uspela");
     } finally {

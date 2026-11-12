@@ -1,8 +1,11 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
+import { RequireRole } from "./components/RequireRole";
 import { AuthProvider } from "./lib/auth";
 import { DrinkDetailPage } from "./pages/DrinkDetailPage";
 import { LoginPage } from "./pages/LoginPage";
+import { ManagerPage } from "./pages/ManagerPage";
+import { OrdersPage } from "./pages/OrdersPage";
 import { PriceListPage } from "./pages/PriceListPage";
 
 export function App() {
@@ -14,6 +17,22 @@ export function App() {
             <Route index element={<PriceListPage />} />
             <Route path="pijace/:id" element={<DrinkDetailPage />} />
             <Route path="prijava" element={<LoginPage />} />
+            <Route
+              path="narocila"
+              element={
+                <RequireRole roles={["WAITER", "MANAGER"]}>
+                  <OrdersPage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="upravljanje"
+              element={
+                <RequireRole roles={["MANAGER"]}>
+                  <ManagerPage />
+                </RequireRole>
+              }
+            />
             <Route path="*" element={<p>Stran ne obstaja.</p>} />
           </Route>
         </Routes>

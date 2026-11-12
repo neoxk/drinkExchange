@@ -1,6 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { api } from "./api";
+import { api, setCsrfToken } from "./api";
 import type { User } from "./types";
+
+interface Session {
+  user: User;
+  csrfToken: string;
+}
 
 interface AuthState {
   user: User | null;
@@ -16,19 +21,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api<User>("/auth/me")
-      .then(setUser, () => setUser(null))
+    api<Session>("/auth/me")
+      .then(
+        (s) => {
+          setCsrfToken(s.csrfToken);
+          setUser(s.user);
+        },
+        () => setUser(null),
+      )
       .finally(() => setLoading(false));
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const u = await api<User>("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
-    setUser(u);
-    return u;
+    const s = await api<Session>("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
+    setCsrfToken(s.csrfToken);
+    setUser(s.user);
+    return s.user;
   }, []);
 
   const logout = useCallback(async () => {
-    await api("/auth/logout", { method: "POST" });
+    await api("/auth/logout", { method: "POST" }).catch(() => undefined);
+    setCsrfToken(null);
     setUser(null);
   }, []);
 

@@ -20,6 +20,8 @@ export function Layout() {
         </NavLink>
         <nav>
           <NavLink to="/" end>Cenik</NavLink>
+          {user && <NavLink to="/narocila">Naročila</NavLink>}
+          {user?.role === "MANAGER" && <NavLink to="/upravljanje">Upravljanje</NavLink>}
           {user ? (
             <>
               <span className="muted small">
