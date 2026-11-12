@@ -14,11 +14,11 @@ async function runForPreviousPeriod() {
 }
 
 /**
- * Ob vsaki polni in pol ure (UTC) obdela pravkar zaključeno obdobje.
+ * Ob vsaki polni in pol minute (UTC) obdela pravkar zaključeno obdobje.
  * Ob zagonu nadoknadi zadnje obdobje, če ga strežnik ni obdelal (npr. zaradi ponovnega zagona).
  */
 export function startPriceJob() {
-  const task = cron.schedule("0,30 * * * *", runForPreviousPeriod, { timezone: "Etc/UTC" });
+  const task = cron.schedule("*/30 * * * * *", runForPreviousPeriod, { timezone: "Etc/UTC" });
   void runForPreviousPeriod();
   return task;
 }

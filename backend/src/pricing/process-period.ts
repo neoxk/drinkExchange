@@ -8,7 +8,7 @@ export type ProcessResult =
   | { status: "skipped"; periodStart: Date; reason: string };
 
 /**
- * Preračuna cene vseh aktivnih pijač za podano 30-minutno obdobje.
+ * Preračuna cene vseh aktivnih pijač za podano 30-sekundno obdobje.
  * Upošteva samo naročila, zaključena v obdobju. Vse spremembe so v eni transakciji;
  * enolični ključ (drink_id, period_start) zagotavlja, da se obdobje obdela največ enkrat.
  */

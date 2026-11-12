@@ -30,9 +30,9 @@ export async function listPublicDrinks() {
   return drinks.map((d) => toPublicDrink(d, d.priceHistory[0]));
 }
 
-const HISTORY_WINDOW_MS = 24 * 60 * 60 * 1000;
+const HISTORY_WINDOW_MS = 60 * 60 * 1000;
 
-/** Zgodovina cen aktivne pijače za zadnjih 24 ur ali null, če pijača ni na voljo. */
+/** Zgodovina cen aktivne pijače za zadnjo uro ali null, če pijača ni na voljo. */
 export async function getDrinkHistory(id: string, now = new Date()) {
   const drink = await prisma.drink.findFirst({ where: { id, active: true } });
   if (!drink) return null;
